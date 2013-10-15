@@ -31,7 +31,7 @@ GROUP 3
 \usepackage{footmisc}
 \usepackage{sectsty}
 \usepackage[headsepline,footsepline]{scrpage2}
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
 \usepackage{titlesec}
 \usepackage{placeins}
 \usepackage{textcomp}
@@ -125,33 +125,41 @@ In this project, a quadcopter is designed and implemented to autonomously fly an
 % \section{Hardware}
 
 \section{System Architecture}
+\label{sec:arch}
 In this section, we will discuss the used hardware and system architecture. First we will take a look at the local control, global control and used sensors, and after that, we will address communication used between these components.
 
 \subsection{Local Control}
+\label{sec:arch:local}
 The local control is powered by an STM32F3Discovery development board, powered by the STM32F303VCT6 processor (a 72 MHz Cortex-M4 MCU), 48 KB RAM and 256 KB flash memory. This board also contains a gyroscope, accelerometer and a magnetic sensor, all measuring three axis. This makes it an ideal board for a quadcopter's local control, because it contains enough processing power, and has all the basic sensors available.
 
 \subsection{Global Control}
+\label{sec:arch:global}
 For the global control, we have chosen for the Raspberry PI. We chose for this platform because it was cheap, we already had it available, and the camera module was expected soon after the start of the project.
 
 Because we wanted two cameras on the quadcopter (one facing to the front, and one facing down), we decided to add two Raspberry PIs to the quadcopter, as each Raspberry PI only has the possibility to connect one camera. This also gave us more processing power available, as each Raspberry PI only has to process one camera.
 
 \subsection{Sensors}
+\label{sec:arch:sensors}
 The local control board already contained the basic sensors required to fly a quadcopter: a gyroscope, an accelerometer and a magnetic sensor. To this list, we added a battery monitor, a barometer and two cameras.
 
 \subsubsection{Battery monitor}
+\label{sec:arch:sensors:battery}
 The battery monitor was a simple voltage divider that connected the battery voltage to one of the ADC pins of the STM32F3Discovery board. The voltage divider was necessary to convert the voltage to the 0 -- 3V domain.
 
 \subsubsection{Barometer}
+\label{sec:arch:sensors:batometer}
 In order to facilitate altitude hold, we needed some means of measuring the current altitude of the quadcopter. Because other teams have reported some problems with the ultrasound sensor, we decided to do something different and try a barometer.
 
 Compared to an ultrasound sensor, a barometer has less accuracy. Also, a barometer provides only a absolute height (to sea level). Thus a command like ``stay at 1 meter from the ground'' is not possible. Instead, we should say ``stay at the current height''. The advantage of the barometer over the ultrasound sensor is that it has no height limits, and that there are no false measurements as reported with the other groups.
 
 \subsubsection{Cameras}
+\label{sec:arch:sensors:cameras}
 We have chosen for the Raspberry PI cameras, because they are affordable, of relative good quality, small and light, and they uses few system resources on the Raspberry PI. Because each Raspberry PI can only interface with one camera, we have placed two Raspberry PIs and cameras on the quadcopter.
 
 These cameras are able to film in 1080p resolution with 30 fps, and take still images with 2592 x 1944 resolution.
 
 \subsection{Communication}
+\label{sec:arch:comm}
 There are many communication-paths, as can be seen in figure \ref{fig:communication}. In this section, these will all be discussed.
 
 \begin{figure}[ht]
@@ -172,49 +180,139 @@ The interface is also flexible. Currently it uses USB, but UART or other protoco
 A presentation on this topic is also available online on \url{http://youtu.be/uEVFPBQtt0U}.
 
 \subsubsection{Raspberry PIs}
+\label{sec:arch:comm:raspi}
 The two Raspberry PIs on the quadcopter need to be able to communicate, and they do this by a standard ethernet (network) cable. We chose for this option because it is supported out of the box and widely supported, and it is fast. Secondly, it allows the first Raspberry PI to share its WiFi connection easily with the second Raspberry PI, allowing easier remote management.
 
 \subsubsection{Laptop}
+\label{sec:arch:comm:laptop}
 On the Raspberry PI runs a normal Linux installation, and that gives the option to add a WiFi adaptor so that it can communicate with the outside world using WiFi. We did this, and even shared the internet connection to the second Raspberry PI, so both could easily download and install new software.
 
 \subsubsection{Barometer}
+\label{sec:arch:comm:barometer}
 The barometer is connected to the first Raspberry PI using I\texttwosuperior C. It is not connected to the STM32F3Discovery, because there where some problems with the I\texttwosuperior C driver in the TauLabs system, that we where unable to properly debug. The Raspberry PI sends the altitude information from the barometer to the STM32F3Discovery using the UAVObjects and the UAVTalk protocol, as discussed in section \ref{sec:arch:comm:localglobal}.
 
 \subsubsection{Camera}
+\label{sec:arch:comm:camera}
 The cameras are attached to the Raspberry PIs, and use a flatcable for the connection to a CSI\footnote{Camera Serial Interface}-interface.
 
 \section{Software}
+\label{sec:software}
+To get all this hardware flying, we need some software to control everything. We have software for local and global control, and both will be discussed in this section.
+
 \subsection{Local control}
+\label{sec:software:local}
+For the local control, we chose for the open source project TauLabs\footnote{\url{https://github.com/TauLabs/TauLabs}}. This project is a fork from the OpenPilot project. We choose for this project, because is was already ported to the hardware we where using (the STM32F3Discovery).
+
+This project provided not only software for the local control, there was also a ``Ground Control Station'' (GCS). This program runs on your computer and communicated with the local control to provide configuration options and means of debugging and monitoring.
 
 \subsection{Global control}
+\label{sec:software:global}
+We have written our own global control program. This program runs on a Raspberry PI, and is a stripped down version of the GCS provided by TauLabs. This allows it to communicate with the local control using UAVObjects, as is discussed in section \ref{sec:arch:comm:localglobal}. Our global control code is also available on GitHub\footnote{\url{https://github.com/fhp/TauLabs}}.
 
+The global control has a fixed core, and allows functionality to be added by modules. We did not have enough time to write really interesting modules, but we do have some ``proof-of-concept'' modules, which will be discussed next. These plugins show that it is possible to read and write data from/to the local control.
+
+\subsubsection{Recorder plugin}
+\label{sec:software:global:recorder}
+This plugin monitors the ``Armed'' flag in the ``FlightStatus'' UAVObject, and as soon as the quadcopter gets armed, it starts recording video on both Raspberry PIs. On disarming, the recording stops. This allows us to easily create in-flight footage with the cameras.
+
+\subsubsection{Barometer plugin}
+\label{sec:software:global:barometer}
+The barometer plugin reads the barometer that is connected to the Raspberry PI using I\texttwosuperior C. It parses the results and writes the resulting altitude information to the ``BaroAltitude'' UAVObject that will then be send to the local control.
 
 \section{Objectives}
+\label{sec:objectives}
 
 \subsection{Building Quadcopter and flying}
+\label{sec:objectives:building}
 
 \subsection{Tuning Local control}
+\label{sec:objectives:tuning}
 
 \subsection{Autonomous flight}
+\label{sec:objectives:autonomous}
 
 \subsection{360 degrees rotation}
+\label{sec:objectives:panorama}
 
 \subsection{Altitude hold}
+\label{sec:objectives:altitude}
 
 \subsection{Drift correction in horizontal axis}
+\label{sec:objectives:drift}
 
 \subsection{Camera capture while rotation}
+\label{sec:objectives:cameraCaptureRotate}
 
 \subsection{Stiching for Panorama image}
+\label{sec:objectives:stitching}
 
-\subsection{On-board Marker identification on Global control}
+\subsection{Face detection}
+\label{sec:objectives:face}
+During our development period of the quadcopter, the Raspberry PI Foundation has released a camera module (figure \ref{fig:raspicamera}) which fits specifically into Raspberry PI's CSI interface. The camera has a 5 megapixel sensor and supports 1080p, 720p, and 640x480p video. The footprint dimensions are 25 x 20 x 9 mm. Compared to a usb webcam which is widely used for personal computers, the Raspberry PI camera has a relatively smaller size and Raspberry PI has opensource driver for the camera which gives larger throughput in terms of image processing. So we decided to use the Raspberry PI camera as the front facing camera.
 
-\subsection{On-board Face detection}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.6\textwidth]{image03}
+\caption{Raspberry PI with camera module.}
+\label{fig:raspicamera}
+\end{figure}
+
+The goal of this face detection task is to make the quadcopter follow and track the movement of a human face while flying. We intended to use OpenCV\footnote{\url{http://opencv.org/}} library as a tool to implement the face detection program on Raspberry PI, and after processing the image, we will find the position of the human face relative to the boundary of the image. Based on that position we can decide whether the quadcopter should fly higher or lower, go to the left or to the right. Moreover, and estimated distance of the face from the camera can be calculated by measuring the area of the face within the image taken by the camera. So the quadcopter can track the face when the face is moving away or towards the quadcopter.
+
+However, when we implement the face detection program, we found out that the API from OpenCV library which will invoke the camera to take video is working. Because the Raspberry PI camera uses a different driver model as the conventional usb webcams, the API which is responsible for invoking the camera was not able to locate the camera.
+
+In the Raspbian system, we where provided with two commands to operate the camera; raspivid and raspistill. raspivid is a command line application that allows you to capture video with the camera module, while the application raspistill allows you to capture images.
+
+In order to extract the driver, we looked at the source code of the two applications in the Raspberry PI github repository\footnote{\url{https://github.com/raspberrypi/userland/tree/master/host_applications/linux/apps/raspicam}}. We figured out that the Raspberry PI system uses MMAL functions to communicate with the camera. And we managed to trim down the the camera driver and integrated it into the face detection code. By feeding the haar cascade filter with the image get from the camera, the program is able to detect faces in the image. The output of the program is the coordinate of the face within the image. Figure \ref{fig:raspifaces} shows that the Raspberry PI can successfully detect faces.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.6\textwidth]{image02}
+\caption{The Raspberry PI has detected faces.}
+\label{fig:raspifaces}
+\end{figure}
+
+Since the face detection program is based on the haar cascade filter, it will have some drawbacks. First, it will be able to find multiple faces in the camera scene. This may seem to be an advantage, but if two faces appear on the scene, then the quadcopter may not know which one to track, so it may lead to unexpected results. Furthermore, according to the way that haar filter works, it will only detect a face that is placed vertically straight in the image, other orientations will not be detected.
+
+\subsection{Marker identification}
+\label{sec:objectives:marker}
+The expected output of our marker detection is that the quadcopter can use the front facing camera to detect and recognise some specific markers on the wall, so that it can do some pre-programmed action, that depends on the detected marker. 
+
+As an aerial vehicle, a quadcopter is very susceptible to disturbances from the surrounding. So a quadcopter has to be constantly tuning its position according to the data from the sensors in order to get its stable position. This has disadvantages for the cameras, because for the cameras, a constantly moving quadcopter make the image blurred and therefore make the detection harder. In order to confront this problem, we need to make the markers robust, so that even for a moving quadcopter, the camera can still recognise the markers with high detection rate.
+
+What we use is called ArUco\footnote{\url{http://www.uco.es/investiga/grupos/ava/node/26}}: a minimal library for Augmented Reality applications based on OpenCV. It is a open-source marker detection library developed by University of Cordoba. The library uses markers as shown in figure \ref{fig:markers}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.8\textwidth]{image00}
+\caption{ArUco markers}
+\label{fig:markers}
+\end{figure}
+
+Each marker has an internal code given by 5 words of 5 bits each (as shown in figure \ref{fig:markerstructure}). The codification employed is a slight modification of the Hamming Code. In total, each word has only 2 bits of information out of the 5 bits employed. The other 3 are employed for error detection. As a consequence, we can have up to 1024 different ids. With the help of Hamming coding, the marker is able to tolerate more errors, and the robustness of the detection is increased.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.25\textwidth]{image04}
+\caption{Marker structure}
+\label{fig:markerstructure}
+\end{figure}
+
+The main difference with the Hamming Code is that the first bit (parity of bits 3 and 5) is inverted. So, the id 0 (which in hamming code is 00000) becomes 10000 in our codification. The idea is to prevent a completely black rectangle from being a valid marker id with the goal of reducing the likelihood of false positives with objects of the environment.
+
+Since we already have the experience of face detection program, we successfully integrated the marker detection code with raspberry pi camera driver as well. As a result of the program it can detect the marker printed on a paper as well as knowing the corresponding id of this marker (figure \ref{fig:markerdetected}). Based on the id, the quadcopter can be assigned to do some pre-defined actions like turn around or go forward, etc.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.6\textwidth]{image05}
+\caption{Detected markers}
+\label{fig:markerdetected}
+\end{figure}
 
 \appendix
 \newpage
 \section{Who did what?}
-% \begin{table}[ht!]
+\subsection{Hardware}
 \begin{tabular}{ll}
 Building the basic quadcopter & Stef, Sunil, Qian \\
 Basic PID tuning & Stef, Sunil, Qian \\
@@ -222,12 +320,22 @@ More PID tuning & Stef \\
 Attaching the cameras & Stef, Sunil \\
 Battery monitor & Stef \\
 Barometer & Stef \\
-Writing the report & Stef \\
+\end{tabular}
+
+\subsection{Software}
+\begin{tabular}{ll}
 UAVTalk on Raspberry PI & Stef \\
 Global control & Stef \\
+Face recognition & Qian \\
+Marker recognition & Qian \\
 \end{tabular}
-% \end{table}
-% \FloatBarrier
+
+\subsection{Report}
+\begin{tabular}{ll}
+System Architecture (section \ref{sec:arch}) & Stef \\
+Software (section \ref{sec:software}) & Stef \\
+Face and marker detection (section \ref{sec:objectives:face}, \ref{sec:objectives:marker}) & Qian \\
+\end{tabular}
 
 \section{Partlist}
 \end{document}
