@@ -146,9 +146,13 @@ The local control board already contained the basic sensors required to fly a qu
 \label{sec:arch:sensors:battery}
 The battery monitor was a simple voltage divider that connected the battery voltage to one of the ADC pins of the STM32F3Discovery board. The voltage divider was necessary to convert the voltage to the 0 -- 3V domain.
 
+\subsubsection{Ultrasound}
+\label{sec:arch:sensors:ultrasound}
+Initially the plan was to use the ultrasound sensor for tracking the altitude of the quadcopter. The HCSR04 sonar driver was requested from Taulabs development team and merged to our code base. The ultrasound driver implementation could be obtained in Github link\footnote{\url{https://github.com/scenkov/TauLabs}}. As we further realized, the ultrasound sensor suffered propeller sound interference which made the sensor values noisy and inaccurate. This happened because there were high frequency components in the sound waves emitted by the propellers and it fell in the band of 40 KHz which was the operating frequency of the sound waves used for ultrasound sensor, hence this interference resulted in changing our design decision to use alternative altitude tracking sensor such as barometer instead of the ultrasound sensor.
+
 \subsubsection{Barometer}
 \label{sec:arch:sensors:batometer}
-In order to facilitate altitude hold, we needed some means of measuring the current altitude of the quadcopter. Because other teams have reported some problems with the ultrasound sensor, we decided to do something different and try a barometer.
+In order to facilitate altitude hold, we needed some means of measuring the current altitude of the quadcopter. Because of the problems we and other teams have experienced with the ultrasound sensor, we decided to do something different and try a barometer.
 
 Compared to an ultrasound sensor, a barometer has less accuracy. Also, a barometer provides only a absolute height (to sea level). Thus a command like ``stay at 1 meter from the ground'' is not possible. Instead, we should say ``stay at the current height''. The advantage of the barometer over the ultrasound sensor is that it has no height limits, and that there are no false measurements as reported with the other groups.
 
@@ -248,6 +252,7 @@ The barometer plugin reads the barometer that is connected to the Raspberry PI u
 
 \subsection{Face detection}
 \label{sec:objectives:face}
+% merge with \ref{sec:arch:sensors:cameras}.
 During our development period of the quadcopter, the Raspberry PI Foundation has released a camera module (figure \ref{fig:raspicamera}) which fits specifically into Raspberry PI's CSI interface. The camera has a 5 megapixel sensor and supports 1080p, 720p, and 640x480p video. The footprint dimensions are 25 x 20 x 9 mm. Compared to a usb webcam which is widely used for personal computers, the Raspberry PI camera has a relatively smaller size and Raspberry PI has opensource driver for the camera which gives larger throughput in terms of image processing. So we decided to use the Raspberry PI camera as the front facing camera.
 
 \begin{figure}[ht]
@@ -309,17 +314,21 @@ Since we already have the experience of face detection program, we successfully 
 \label{fig:markerdetected}
 \end{figure}
 
-\appendix
+\FloatBarrier
+\hbox{}
 \newpage
+\appendix
+
 \section{Who did what?}
 \subsection{Hardware}
 \begin{tabular}{ll}
 Building the basic quadcopter & Stef, Sunil, Qian \\
 Basic PID tuning & Stef, Sunil, Qian \\
 More PID tuning & Stef \\
-Attaching the cameras & Stef, Sunil \\
-Battery monitor & Stef \\
-Barometer & Stef \\
+Installing the cameras & Stef, Sunil \\
+Installing the ultrasound sensor & Stef, Sunil \\
+Installing the battery monitor & Stef \\
+Installing the barometer & Stef \\
 \end{tabular}
 
 \subsection{Software}
@@ -328,14 +337,76 @@ UAVTalk on Raspberry PI & Stef \\
 Global control & Stef \\
 Face recognition & Qian \\
 Marker recognition & Qian \\
+Sonar integration on local control & Sunil \\
 \end{tabular}
 
 \subsection{Report}
 \begin{tabular}{ll}
 System Architecture (section \ref{sec:arch}) & Stef \\
+Ultrasound (section \ref{sec:arch:sensors:ultrasound}) & Sunil \\
 Software (section \ref{sec:software}) & Stef \\
-Face and marker detection (section \ref{sec:objectives:face}, \ref{sec:objectives:marker}) & Qian \\
+Objectives (section \ref{sec:objectives:cameraCaptureRotate}) & Sunil \\
+Face detection (section \ref{sec:objectives:face}) & Qian \\
+Marker detection (section \ref{sec:objectives:marker}) & Qian \\
 \end{tabular}
 
+\newpage
 \section{Partlist}
+\begin{tabular}{llll}
+  & \multicolumn{3}{l}{HobbyKing \#2006549947} \\ % Stef
+1 & Extra Large EPP Quadcopter Frame 450mm & \$27.81 & \$27.81 \\
+1 & Turnigy 5000mAh 3S 30C Lipo Pack & \$40.87 & \$40.87 \\
+2 & Slow Fly Electric Prop 1045 SF & \$3.57 &  \$7.14 \\
+  & Shipping & -- & \$7.93 \\
+\hline % euro: 67,32
+
+
+  & \multicolumn{3}{l}{HobbyKing \#2006549967} \\ % Stef
+1 & Polymax 5.5mm Gold Connectors 10 pairs & \$5.39 & \$5.39 \\
+2 & Slow Fly Electric Prop 1045R SF & \$3.53 & \$7.06 \\
+4 & Turnigy DST-1200 Brushless Bell Motor 1200kv & \$7.16 & \$28.64 \\
+4 & HobbyKing Red Brick 20A ESC & \$7.18 & \$28.72 \\
+  & Shipping & -- & \$6.01 \\
+\hline % euro: 60,47
+
+  & \multicolumn{3}{l}{Deal eXtreme \#130402001086499449} \\ % Stef
+2 & HC-SR04 Ultrasonic Sensor Distance Measuring Module & \$3.20 & \$6.40 \\
+1 & JY-MCU Bluetooth Serial Port Module & \$8.20 & \$8.20 \\
+\hline % euro: 11,74
+
+  & \multicolumn{3}{l}{Deal eXtreme \#130402001088428719} \\ % Stef
+1 & Super Mini Bluetooth 2.0 Adapter Dongle & \$1.80 & \$1.80 \\
+\hline % euro: 1,45
+
+  & \multicolumn{3}{l}{Dick Best \#130506-231645-1685} \\ % Stef
+2 & Header 2x28 polig Female Recht Verguld & \texteuro2.00 & \texteuro4.00 \\
+2 & Header 2x11 polig Female & \texteuro1.20 & \texteuro2.40 \\
+1 & Header  15 polig Female & \texteuro0.90 & \texteuro0.90 \\
+  & Shipping & -- & \texteuro2.25 \\
+\hline % euro: 9.55
+
+  & \multicolumn{3}{l}{Farnell \#ORP116530} \\ % Stef
+2 & RASPBERRY PI, MODEL B, 512MB & £28.31 & £56.62 \\
+2 & RASPBERRY PI CAMERA BOARD & £20.04 & £40.08 \\
+\hline % euro: 114.37
+
+  & \multicolumn{3}{l}{HobbyKing \#2007104426} \\ % Stef
+1 & ZIPPY Flightmax 4200mAh 3S1P 30C & \$32.96 & \$32.96 \\
+  & Shipping & -- & \$6.01 \\
+\hline % euro: 30.00
+
+  & \multicolumn{3}{l}{Ebay \#434632019023} \\ % Stef
+1 & BMP085 Barometric Digital Pressure Sensor & \$4,09 CAD & \$4,09 CAD \\
+\hline % euro 3.01
+
+  & \multicolumn{3}{l}{Ebay \#874439470014} \\ % Stef
+1 & Low Voltage Buzzer For 2s 3s Lipo Battery & \$1,96 & \$1,96 \\
+\hline % euro 1.53
+
+% Total Stef: euro 299.44
+
+\hline
+  & Total & -- & \texteuro 299.44 \\
+
+\end{tabular}
 \end{document}
