@@ -74,8 +74,9 @@ GROUP 3
 
 
 % Header and footer
-%\ihead{\docsubject{}}
-\chead{\centerhead{}}
+\ihead{\docsubject{}}
+\chead{}
+\ohead{\centerhead{}}
 \ifoot{\headmark}
 \cfoot{\centerfoot{}}
 \ofoot{\thepage}
@@ -130,13 +131,27 @@ In this section, we will discuss the used hardware and system architecture. Firs
 
 \subsection{Local Control}
 \label{sec:arch:local}
-The local control is powered by an STM32F3Discovery development board, powered by the STM32F303VCT6 processor (a 72 MHz Cortex-M4 MCU), 48 KB RAM and 256 KB flash memory. This board also contains a gyroscope, accelerometer and a magnetic sensor, all measuring three axis. This makes it an ideal board for a quadcopter's local control, because it contains enough processing power, and has all the basic sensors available.
+The local control is powered by an STM32F3Discovery development board (figure \ref{fig:stm32f3}), powered by the STM32F303VCT6 processor (a 72 MHz Cortex-M4 MCU), 48 KB RAM and 256 KB flash memory. This board also contains a gyroscope, accelerometer and a magnetic sensor, all measuring three axis. This makes it an ideal board for a quadcopter's local control, because it contains enough processing power, and has all the basic sensors available.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.6\textwidth]{STM32F3DISCOVERY}
+\caption{An STM32F3Discovery.}
+\label{fig:stm32f3}
+\end{figure}
 
 \subsection{Global Control}
 \label{sec:arch:global}
-For the global control, we have chosen for the Raspberry PI. We chose for this platform because it was cheap, we already had it available, and the camera module was expected soon after the start of the project.
+For the global control, we have chosen for the Raspberry PI (figure \ref{fig:raspi}). We chose for this platform because it was cheap, we already had it available, and the camera module was expected soon after the start of the project.
 
 Because we wanted two cameras on the quadcopter (one facing to the front, and one facing down), we decided to add two Raspberry PIs to the quadcopter, as each Raspberry PI only has the possibility to connect one camera. This also gave us more processing power available, as each Raspberry PI only has to process one camera.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.6\textwidth]{image01}
+\caption{A Raspberry PI.}
+\label{fig:raspi}
+\end{figure}
 
 \subsection{Sensors}
 \label{sec:arch:sensors}
@@ -148,19 +163,41 @@ The battery monitor was a simple voltage divider that connected the battery volt
 
 \subsubsection{Ultrasound}
 \label{sec:arch:sensors:ultrasound}
-Initially the plan was to use the ultrasound sensor for tracking the altitude of the quadcopter. The HCSR04 sonar driver was requested from Taulabs development team and merged to our code base. The ultrasound driver implementation could be obtained in Github link\footnote{\url{https://github.com/scenkov/TauLabs}}. As we further realized, the ultrasound sensor suffered propeller sound interference which made the sensor values noisy and inaccurate. This happened because there were high frequency components in the sound waves emitted by the propellers and it fell in the band of 40 KHz which was the operating frequency of the sound waves used for ultrasound sensor, hence this interference resulted in changing our design decision to use alternative altitude tracking sensor such as barometer instead of the ultrasound sensor.
+Initially the plan was to use the ultrasound sensor (figure \ref{fig:hcsr04}) for tracking the altitude of the quadcopter. The HCSR04 sonar driver was requested from Taulabs development team and merged to our code base. The ultrasound driver implementation could be obtained in Github link\footnote{\url{https://github.com/scenkov/TauLabs}}. As we further realized, the ultrasound sensor suffered propeller sound interference which made the sensor values noisy and inaccurate. This happened because there were high frequency components in the sound waves emitted by the propellers and it fell in the band of 40 KHz which was the operating frequency of the sound waves used for ultrasound sensor, hence this interference resulted in changing our design decision to use alternative altitude tracking sensor such as barometer instead of the ultrasound sensor.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.3\textwidth]{HC-SR04}
+\caption{The HCSR04 sensor.}
+\label{fig:hcsr04}
+\end{figure}
 
 \subsubsection{Barometer}
 \label{sec:arch:sensors:batometer}
-In order to facilitate altitude hold, we needed some means of measuring the current altitude of the quadcopter. Because of the problems we and other teams have experienced with the ultrasound sensor, we decided to do something different and try a barometer.
+In order to facilitate altitude hold, we needed some means of measuring the current altitude of the quadcopter. Because of the problems we and other teams have experienced with the ultrasound sensor, we decided to do something different and try a barometer (figure \ref{fig:BMP085}).
 
 Compared to an ultrasound sensor, a barometer has less accuracy. Also, a barometer provides only a absolute height (to sea level). Thus a command like ``stay at 1 meter from the ground'' is not possible. Instead, we should say ``stay at the current height''. The advantage of the barometer over the ultrasound sensor is that it has no height limits, and that there are no false measurements as reported with the other groups.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.3\textwidth]{BMP085}
+\caption{The BMP085 barometer.}
+\label{fig:BMP085}
+\end{figure}
 
 \subsubsection{Cameras}
 \label{sec:arch:sensors:cameras}
 We have chosen for the Raspberry PI cameras, because they are affordable, of relative good quality, small and light, and they uses few system resources on the Raspberry PI. Because each Raspberry PI can only interface with one camera, we have placed two Raspberry PIs and cameras on the quadcopter.
 
 These cameras are able to film in 1080p resolution with 30 fps, and take still images with 2592 x 1944 resolution.
+
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.6\textwidth]{image03}
+\caption{Raspberry PI with camera module.}
+\label{fig:raspicamera}
+\end{figure}
 
 \subsection{Communication}
 \label{sec:arch:comm}
@@ -225,42 +262,43 @@ The barometer plugin reads the barometer that is connected to the Raspberry PI u
 
 \section{Objectives}
 \label{sec:objectives}
+Here we will discuss the objectives given in the course, and how we handled them.
 
 \subsection{Building Quadcopter and flying}
 \label{sec:objectives:building}
+We have build our quadcopter, and made fly. See figure \ref{fig:quad} for a photo.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.6\textwidth]{quad}
+\caption{Our quadcopter.}
+\label{fig:quad}
+\end{figure}
 
 \subsection{Tuning Local control}
 \label{sec:objectives:tuning}
-
-\subsection{Autonomous flight}
-\label{sec:objectives:autonomous}
-
-\subsection{360 degrees rotation}
-\label{sec:objectives:panorama}
+We spend a lot of time on PID tuning, but only in the end we found that some of the settings where completely wrong; the direction that the motors where spinning was configured wrong, so yaw corrections resulted in more yaw, crashing the quadcopter. Also one of our speed controllers was not functioning correctly, which led to an unstable quadcopter.
 
 \subsection{Altitude hold}
 \label{sec:objectives:altitude}
+Altitude hold should have been possible with the barometer installed, but there was no time to actually test this.
+
+\subsection{Autonomous flight}
+\label{sec:objectives:autonomous}
+We did not manage to get the quadcopter fly autonomously, because it was not stable enough and still needed some manual corrections, and we didn't have altitude hold working.
+
+\subsection{360 degrees panorama}
+\label{sec:objectives:panorama}
+We where unable to implement this, because we didn't have altitude hold and autonomous flight.
 
 \subsection{Drift correction in horizontal axis}
 \label{sec:objectives:drift}
-
-\subsection{Camera capture while rotation}
-\label{sec:objectives:cameraCaptureRotate}
-
-\subsection{Stiching for Panorama image}
-\label{sec:objectives:stitching}
+We where unable to implement this, because we didn't have altitude hold and autonomous flight.
 
 \subsection{Face detection}
 \label{sec:objectives:face}
 % merge with \ref{sec:arch:sensors:cameras}.
 During our development period of the quadcopter, the Raspberry PI Foundation has released a camera module (figure \ref{fig:raspicamera}) which fits specifically into Raspberry PI's CSI interface. The camera has a 5 megapixel sensor and supports 1080p, 720p, and 640x480p video. The footprint dimensions are 25 x 20 x 9 mm. Compared to a usb webcam which is widely used for personal computers, the Raspberry PI camera has a relatively smaller size and Raspberry PI has opensource driver for the camera which gives larger throughput in terms of image processing. So we decided to use the Raspberry PI camera as the front facing camera.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.6\textwidth]{image03}
-\caption{Raspberry PI with camera module.}
-\label{fig:raspicamera}
-\end{figure}
 
 The goal of this face detection task is to make the quadcopter follow and track the movement of a human face while flying. We intended to use OpenCV\footnote{\url{http://opencv.org/}} library as a tool to implement the face detection program on Raspberry PI, and after processing the image, we will find the position of the human face relative to the boundary of the image. Based on that position we can decide whether the quadcopter should fly higher or lower, go to the left or to the right. Moreover, and estimated distance of the face from the camera can be calculated by measuring the area of the face within the image taken by the camera. So the quadcopter can track the face when the face is moving away or towards the quadcopter.
 
@@ -342,12 +380,10 @@ Sonar integration on local control & Sunil \\
 
 \subsection{Report}
 \begin{tabular}{ll}
-System Architecture (section \ref{sec:arch}) & Stef \\
 Ultrasound (section \ref{sec:arch:sensors:ultrasound}) & Sunil \\
-Software (section \ref{sec:software}) & Stef \\
-Objectives (section \ref{sec:objectives:cameraCaptureRotate}) & Sunil \\
 Face detection (section \ref{sec:objectives:face}) & Qian \\
 Marker detection (section \ref{sec:objectives:marker}) & Qian \\
+The other sections & Stef \\
 \end{tabular}
 
 \newpage
@@ -404,8 +440,9 @@ In the total, all currencies have been converted to euro's.
 
   & \multicolumn{3}{l}{Ebay \#874439470014} \\ % Stef
 1 & Low Voltage Buzzer For 2s 3s Lipo Battery & \$1&96 & \$1&96 \\
-\hline % euro 1.53
+% euro 1.53
 
+\hline
 \hline
   & \textbf{Subtotal} & \multicolumn{2}{c}{} & \texteuro 299&44 \\
 \end{tabular}
@@ -438,10 +475,11 @@ In the total, all currencies have been converted to euro's.
   & \multicolumn{3}{l}{Ebay \#160991485511} \\ % Qian
 1 & STM32F3 Discovery & \pounds20&98  & \pounds20&98 \\
   & Shipping & \multicolumn{2}{c}{--} & \pounds10&99 \\
-\hline % euro 37.84
+% euro 37.84
 
 % Total Qian 37.84
 
+\hline
 \hline
   & \textbf{Total} & \multicolumn{2}{c}{} & \texteuro 419&74 \\
 
